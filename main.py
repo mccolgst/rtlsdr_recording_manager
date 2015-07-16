@@ -1,0 +1,27 @@
+from flask import Flask, render_template
+from flask.ext.sqlalchemy import SQLAlchemy
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from models import User, Schedule
+
+# set up the app object config
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+app.debug = True
+app.secret_key = 'secret town'
+
+
+# create the db
+db = SQLAlchemy(app)
+
+# initialize the admin app
+admin = Admin(app)
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Schedule, db.session))
+
+@app.route("/")
+def hello():
+    return render_template("index.html", schedules=Schedule.query.all())
+
+if __name__ == "__main__":
+    app.run()
