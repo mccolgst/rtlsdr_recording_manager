@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from models import User, Schedule
+from models import Schedule, Recording
 
 # set up the app object config
 app = Flask(__name__)
@@ -16,8 +16,9 @@ db = SQLAlchemy(app)
 
 # initialize the admin app
 admin = Admin(app)
-admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(Schedule, db.session))
+admin.add_view(ModelView(Recording, db.session))
+
 
 @app.route("/")
 def hello():

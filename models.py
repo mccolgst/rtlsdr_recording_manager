@@ -9,6 +9,26 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
 cron = CronTab(user=True)
 command_template = '{} {}/record.py {} {} --schedule_id {}'
+# use schedule_<id> comment for easy lookup later on for CRUD ops
+comment_template = 'schedule_{}'
+
+
+def _render_cron_command(schedule_object):
+    return command_template.format(sys.executable,
+                                   os.path.dirname(os.path.realpath(__file__)),
+                                   schedule_object.frequency,
+                                   schedule_object.duration_seconds,
+                                   schedule_object.id,
+                                   schedule_object.id)
+
+
+def _find_cron_by_schedule_id(schedule_id):
+    print schedule_id
+    print comment_template.format(schedule_id)
+    iterator = cron.find_comment(comment_template.format(schedule_id))
+    job = [job for job in iterator][0]  # cron find returns an iterator so THIS is awkward.
+    return job
+
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,41 +37,64 @@ class Schedule(db.Model):
     cron_schedule = db.Column(db.String)
     # name
     # active
+    # delete recordings when it's parent schedule is deleted
+    recordings = db.relationship('Recording',
+                                 backref='user',
+                                 cascade='all, delete, delete-orphan')
 
     def __repr__(self):
         return "<Schedule at {} \
                for {} seconds - cron: {}>".format(self.frequency,
-                                                    self.duration_seconds,
-                                                    self.cron_schedule)
+                                                  self.duration_seconds,
+                                                  self.cron_schedule)
+
 
 @event.listens_for(Schedule, 'after_insert')
-def set_up_cron(mapper, connection, target):
-    command = command_template.format(sys.executable,
-                                      os.path.dirname(os.path.realpath(__file__)),
-                                      target.frequency,
-                                      target.duration_seconds,
-                                      target.id)
+def new_cron(mapper, connection, target):
+    command = _render_cron_command(target)
     job = cron.new(command=command)
+    job.set_comment(comment_template.format(target.id))
     job.setall(target.cron_schedule)
-    print "about to write cron once"
     cron.write()
 
-# TODO: update cron
-#       delete cron
+
+@event.listens_for(Schedule, 'after_update')
+def update_cron(mapper, connection, target):
+    new_command = _render_cron_command(target)
+    job = _find_cron_by_schedule_id(target.id)
+    # set command, command and schedule
+    job.set_command(new_command)
+    job.set_comment(comment_template.format(target.id))
+    job.setall(target.cron_schedule)
+    cron.write()
+
+
+@event.listens_for(Schedule, 'after_delete')
+def delete_cron(mapper, connection, target):
+    job = _find_cron_by_schedule_id(target.id)
+    # remove the cron we found
+    cron.remove(job)
+    cron.write()
+
+
+# TODO events:
 #       activate/deactivate cron
+
 
 class Recording(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recorded_file = db.Column(db.String)
     schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id'))
-    schedule = db.relationship('Schedule', backref=db.backref('recordings', lazy='dynamic'))
+    # delete recordings when a schedule is deleted
 
-# TODO: delete recordings hook to delete recording file
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
-    email = db.Column(db.String(120), unique=True)
-
-    def __repr__(self):
-        return '<User {}>'.format(self.username)
+@event.listens_for(Recording, 'after_delete')
+def delete_recorded_file(mapper, connection, target):
+    # delete associated recording file
+    try:
+        os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               'recordings',
+                               target.recorded_file))
+    except OSError:
+        # I don't really care about this yet
+        pass

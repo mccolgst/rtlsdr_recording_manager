@@ -20,6 +20,7 @@ if __name__ == '__main__':
         outfile = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                'recordings',
                                str(uuid.uuid4()))
+        # TODO: add more descriptive outfile name to associate with schedule
 
     if args.schedule_id:
         # create a recording object in the db
