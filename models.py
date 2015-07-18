@@ -32,19 +32,21 @@ def _find_cron_by_schedule_id(schedule_id):
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
     frequency = db.Column(db.String)
     duration_seconds = db.Column(db.Integer)
     cron_schedule = db.Column(db.String)
-    # name
-    # active
+    enabled = db.Column(db.Boolean)
+
     # delete recordings when it's parent schedule is deleted
     recordings = db.relationship('Recording',
                                  backref='user',
                                  cascade='all, delete, delete-orphan')
 
     def __repr__(self):
-        return "<Schedule at {} \
-               for {} seconds - cron: {}>".format(self.frequency,
+        return "<Schedule {} at {} \
+               for {} seconds - cron: {}>".format(self.name,
+                                                  self.frequency,
                                                   self.duration_seconds,
                                                   self.cron_schedule)
 
@@ -55,6 +57,7 @@ def new_cron(mapper, connection, target):
     job = cron.new(command=command)
     job.set_comment(comment_template.format(target.id))
     job.setall(target.cron_schedule)
+    job.enable(target.enabled)
     cron.write()
 
 
@@ -66,6 +69,7 @@ def update_cron(mapper, connection, target):
     job.set_command(new_command)
     job.set_comment(comment_template.format(target.id))
     job.setall(target.cron_schedule)
+    job.enable(target.enabled)
     cron.write()
 
 
@@ -75,10 +79,6 @@ def delete_cron(mapper, connection, target):
     # remove the cron we found
     cron.remove(job)
     cron.write()
-
-
-# TODO events:
-#       activate/deactivate cron
 
 
 class Recording(db.Model):

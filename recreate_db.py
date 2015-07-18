@@ -10,7 +10,7 @@ import os
 
 if __name__ == '__main__':
     try:
-        os.remove('/tmp/temp.db')
+        os.remove('/tmp/test.db')
     except OSError:
         print 'db didn\'t exist!'
 

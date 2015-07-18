@@ -15,3 +15,7 @@
 .navbar-inverse .navbar-nav>.active>a:hover {
     background-color: transparent;
 }
+
+.disabled_schedule {
+    color:grey;
+}
