@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+        <h1>Recordings for '{{ schedule.name }}':</h1>
+        <table class="table">
+        <thead>
+          <tr>
+            <th>created</th>
+            <th>playback</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for recording in schedule.recordings %}
+          <tr>
+            <td>{{ recording.created }}</td>
+            <td>
+              <audio controls>
+                <source type="audio/ogg" src="http://localhost:8080/{{ recording.recorded_file }}">
+              </audio>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+{% endblock %}

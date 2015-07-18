@@ -84,6 +84,7 @@ class Recording(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recorded_file = db.Column(db.String)
     schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id'))
+    created = db.Column(db.DateTime)
     # delete recordings when a schedule is deleted
 
 

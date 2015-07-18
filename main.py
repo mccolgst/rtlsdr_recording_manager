@@ -21,8 +21,14 @@ admin.add_view(ModelView(Recording, db.session))
 
 
 @app.route("/")
-def hello():
+def main():
     return render_template("index.html", schedules=Schedule.query.all())
+
+
+@app.route("/schedule/<int:schedule_id>")
+def schedule_view(schedule_id):
+    return render_template("schedule.html", schedule=Schedule.query.get(schedule_id))
+
 
 if __name__ == "__main__":
     app.run('0.0.0.0')

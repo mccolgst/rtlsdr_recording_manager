@@ -1,6 +1,7 @@
 import subprocess
 import argparse
 import time
+from datetime import datetime
 from models import db, Recording
 import os
 import uuid
@@ -25,7 +26,7 @@ if __name__ == '__main__':
 
     if args.schedule_id:
         # create a recording object in the db
-        recording = Recording(schedule_id=args.schedule_id, recorded_file=outfile)
+        recording = Recording(schedule_id=args.schedule_id, recorded_file=outfile, created=datetime.now())
         db.session.add(recording)
         db.session.commit()
     command = '/usr/local/bin/rtl_fm -f {} -M wbfm -s 200000 -r 48000 - | lame -r -s 48 -m m -'.format(str(args.frequency))
