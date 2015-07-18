@@ -40,7 +40,6 @@ class Schedule(db.Model):
 
     # delete recordings when it's parent schedule is deleted
     recordings = db.relationship('Recording',
-                                 backref='user',
                                  cascade='all, delete, delete-orphan')
 
     def __repr__(self):
@@ -92,9 +91,7 @@ class Recording(db.Model):
 def delete_recorded_file(mapper, connection, target):
     # delete associated recording file
     try:
-        os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               'recordings',
-                               target.recorded_file))
+        os.remove(target.recorded_file)
     except OSError:
         # I don't really care about this yet
         pass

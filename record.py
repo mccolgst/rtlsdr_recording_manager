@@ -2,7 +2,9 @@ import subprocess
 import argparse
 import time
 from models import db, Recording
-import os, uuid
+import os
+import uuid
+import signal
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='record some radio')
@@ -17,9 +19,8 @@ if __name__ == '__main__':
     if args.outfile:
         outfile = args.outfile
     else:
-        outfile = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               'recordings',
-                               str(uuid.uuid4()))
+        outfile = os.path.join('recordings',
+                               str(uuid.uuid4())+'.mp3')
         # TODO: add more descriptive outfile name to associate with schedule
 
     if args.schedule_id:
@@ -27,9 +28,10 @@ if __name__ == '__main__':
         recording = Recording(schedule_id=args.schedule_id, recorded_file=outfile)
         db.session.add(recording)
         db.session.commit()
-
-    command = '/usr/local/bin/rtl_fm -f {} -M wbfm -s 200000 -r 48000 - '.format(str(args.frequency))
+    command = '/usr/local/bin/rtl_fm -f {} -M wbfm -s 200000 -r 48000 - | lame -r -s 48 -m m -'.format(str(args.frequency))
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(current_path)
     with open(outfile, 'wb') as of:
-        p = subprocess.Popen('exec ' + command, shell=True, stdout=of)
+        p = subprocess.Popen(command, shell=True, stdout=of, stderr=of, close_fds=True, preexec_fn=os.setsid)
     time.sleep(args.seconds)
-    p.kill()
+    os.killpg(p.pid, signal.SIGTERM)

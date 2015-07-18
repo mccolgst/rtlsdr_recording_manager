@@ -37,18 +37,16 @@
       <div class="starter-template">
         <h1>Schedules:</h1>
         {% for schedule in schedules %}
-            {% if not schedule.enabled %} {# disabled schedules are greyed out #}
-            <span class="disabled_schedule">
-            {% endif %}
-            <h3>{{ schedule }}</h3>
+
+            <h3>{{ schedule.name }}</h3>
             <ul>
             {% for recording in schedule.recordings %}
+                <audio controls>
+                  <source type="audio/ogg" src="http://localhost:8080/{{ recording.recorded_file }}">
+                </audio>
                 <li>{{ recording }}</li>
             {% endfor %}
             </ul>
-            {% if not schedule.enabled %}
-              </span>
-            {% endif %}
         {% endfor %}
       </div>
 
