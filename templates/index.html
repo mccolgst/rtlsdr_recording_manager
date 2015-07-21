@@ -7,6 +7,7 @@
             <th>name</th>
             <th>enabled</th>
             <th>radio frequency</th>
+            <th>next launch</th>
             <th>cron schedule</th>
           </tr>
         </thead>
@@ -22,6 +23,7 @@
                 {% endif %}
             </td>
             <td>{{ schedule.frequency }}</td>
+            <td><script>document.write(moment("{{ schedule.next_launch }}", "YYYY-MM-DD HH:mm:ss").fromNow());</script></td>
             <td>{{ schedule.cron_schedule }}</td>
           </tr>
           {% endfor %}

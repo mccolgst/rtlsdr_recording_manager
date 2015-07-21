@@ -3,6 +3,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from models import Schedule, Recording
+from croniter import croniter
+from datetime import datetime
 
 # set up the app object config
 app = Flask(__name__)
@@ -22,6 +24,12 @@ admin.add_view(ModelView(Recording, db.session))
 
 @app.route("/")
 def main():
+    schedules = Schedule.query.all()
+    now = datetime.now()
+    for schedule in schedules:
+        iterator = croniter(schedule.cron_schedule, now)
+        schedule.next_launch = iterator.get_next(datetime)
+        print schedule.next_launch
     return render_template("index.html", schedules=Schedule.query.all())
 
 
