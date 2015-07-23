@@ -33,6 +33,6 @@ if __name__ == '__main__':
     current_path = os.path.dirname(os.path.abspath(__file__))
     os.chdir(current_path)
     with open(outfile, 'wb') as of:
-        p = subprocess.Popen(command, shell=True, stdout=of, stderr=of, close_fds=True, preexec_fn=os.setsid)
+        p = subprocess.Popen(command, shell=True, stdout=of, close_fds=True, preexec_fn=os.setsid)
     time.sleep(args.seconds)
     os.killpg(p.pid, signal.SIGTERM)
