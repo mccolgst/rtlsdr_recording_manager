@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
+        <script type="text/javascript">
+            $(document).ready(function(){
+                refresh_countdown = function(){
+                    $('.next_launch').each(function(i, ele){
+                        ele.innerHTML = moment(ele.dataset.date).fromNow();
+                    });
+                };
+                refresh_countdown()
+
+                // run refresh_countdown every minute
+                setInterval(refresh_countdown, 1000 * 60);
+            });
+        </script>
         <h1>Schedules:</h1>
         <table class="table">
         <thead>
@@ -13,7 +26,6 @@
         </thead>
         <tbody>
           {% for schedule in schedules %}
-
           <tr>
             <td><a href="/schedule/{{ schedule.id }}">{{ schedule.name }}</a></td>
             <td>{% if schedule.enabled %}
@@ -23,7 +35,7 @@
                 {% endif %}
             </td>
             <td>{{ schedule.frequency }}</td>
-            <td><script>document.write(moment("{{ schedule.next_launch }}", "YYYY-MM-DD HH:mm:ss").fromNow());</script></td>
+            <td class="next_launch" data-date="{{ schedule.next_launch }}"></td>
             <td>{{ schedule.cron_schedule }}</td>
           </tr>
           {% endfor %}
